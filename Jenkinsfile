@@ -2,32 +2,39 @@ pipeline {
     agent any
 
     environment {
-        IMAGE = "praksahdocker/notes-app"        // ← your Docker Hub username
-        DOCKER_CREDS = credentials('dockerhub')  // ← the credential you already stored
+        IMAGE = "praksahdocker/note-app"
+        DOCKER_CREDS = credentials('dockerhub')
     }
 
     stages {
         stage('Build') {
             steps {
-                // TODO: docker build with two tags ($BUILD_NUMBER and latest)
+                echo 'Building Docker image...'
+                sh 'docker build -t $IMAGE:$BUILD_NUMBER -t $IMAGE:latest .'
             }
         }
 
         stage('Test') {
             steps {
-                // TODO: verify the image exists (docker image inspect)
+                echo 'Verifying image was built...'
+                sh 'docker image inspect $IMAGE:$BUILD_NUMBER'
             }
         }
 
         stage('Push') {
-            when { branch 'main' }               // NEW: only on main
             steps {
-                // TODO: docker login with --password-stdin, then push both tags
+                echo 'Pushing to Docker Hub...'
+                sh 'echo $DOCKER_CREDS_PSW | docker login -u $DOCKER_CREDS_USR --password-stdin'
+                sh 'docker push $IMAGE:$BUILD_NUMBER'
+                sh 'docker push $IMAGE:latest'
             }
         }
     }
 
     post {
-        // NEW: success, failure, always blocks
+        always {
+            sh 'docker logout || true'
+            echo 'Pipeline finished.'
+        }
     }
 }
