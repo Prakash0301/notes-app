@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        IMAGE = "praksahdocker/note-app"
+        IMAGE = "praksahdocker/notes-app"
         DOCKER_CREDS = credentials('dockerhub')
     }
 
@@ -32,9 +32,14 @@ pipeline {
     }
 
     post {
+        success {
+            echo 'Pipeline succeeded - image pushed!'
+        }
+        failure {
+            echo 'Pipeline failed - check the logs.'
+        }
         always {
             sh 'docker logout || true'
-            echo 'Pipeline finished.'
         }
     }
 }
